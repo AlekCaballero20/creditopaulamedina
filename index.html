@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Control de pagos del crédito de Paula Medina. Visualiza avance, saldo pendiente, histórico y fecha estimada de finalización." />
+  <meta name="theme-color" content="#f6f7fb" />
+
+  <title>Crédito Paula Medina · Control de Pagos</title>
+
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <a href="#contenido" class="skipLink">Saltar al contenido</a>
+
+  <header class="wrap header" role="banner">
+    <div class="headerIntro">
+      <p class="eyebrow">Control financiero</p>
+      <h1>💳 Crédito Paula Medina</h1>
+      <p class="muted headerLead">
+        Seguimiento claro del crédito, con avance total, saldo pendiente, pagos históricos
+        y una estimación de finalización basada en los abonos registrados.
+      </p>
+    </div>
+
+    <div class="headerActions">
+      <button id="btnReload" class="btn" type="button" title="Actualizar datos del crédito" aria-label="Actualizar datos">
+        🔄 Actualizar
+      </button>
+    </div>
+  </header>
+
+  <main id="contenido" class="wrap" tabindex="-1">
+    <!-- HERO / RESUMEN PRINCIPAL -->
+    <section class="card block hero" aria-labelledby="tituloResumen">
+      <div class="heroTop">
+        <div>
+          <p class="sectionKicker">Resumen general</p>
+          <h2 class="heroTitle" id="tituloResumen">📌 Estado actual del crédito</h2>
+          <p class="muted heroSub">
+            Este panel se alimenta automáticamente desde el histórico publicado en la hoja.
+          </p>
+        </div>
+
+        <div class="heroBadge" id="heroBadge" title="Estado del crédito" aria-live="polite">
+          ⏳ En curso
+        </div>
+      </div>
+
+      <div class="heroGrid">
+        <div class="heroProgress" aria-label="Progreso general del crédito">
+          <div class="progressHeader">
+            <div class="progressLabel">Avance del pago</div>
+            <div class="progressPercent" id="progressPercent" aria-live="polite">—%</div>
+          </div>
+
+          <div
+            class="progressBar"
+            role="progressbar"
+            aria-label="Porcentaje pagado del crédito"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+          >
+            <div class="progressFill" id="progressFill" style="width:0%"></div>
+          </div>
+
+          <div class="progressFoot">
+            <span class="muted">Abonado: <strong id="progressPaid">$0</strong></span>
+            <span class="muted">Restante: <strong id="progressLeft">$0</strong></span>
+          </div>
+
+          <div class="heroNote">
+            <p class="muted tiny">
+              El porcentaje se calcula usando el valor total configurado del crédito y la suma de todos los abonos encontrados.
+            </p>
+          </div>
+        </div>
+
+        <div class="heroKpis" aria-label="Indicadores principales del crédito">
+          <article class="kpi">
+            <div class="kpiLabel">💰 Valor total del crédito</div>
+            <div class="kpiValue" id="totalCredito">$0</div>
+            <div class="kpiHint">Monto base configurado para el seguimiento.</div>
+          </article>
+
+          <article class="kpi">
+            <div class="kpiLabel">✅ Total abonado</div>
+            <div class="kpiValue" id="totalAbonado">$0</div>
+            <div class="kpiHint">Suma de todos los pagos registrados.</div>
+          </article>
+
+          <article class="kpi">
+            <div class="kpiLabel">🧾 Saldo pendiente</div>
+            <div class="kpiValue" id="saldoRestante">$0</div>
+            <div class="kpiHint">Lo que aún falta por cubrir.</div>
+          </article>
+
+          <article class="kpi">
+            <div class="kpiLabel">🕒 Último pago registrado</div>
+            <div class="kpiValue" id="ultimoPago">—</div>
+            <div class="kpiHint" id="ultimoPagoValor"></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- INDICADORES RÁPIDOS -->
+    <section class="grid cards" aria-label="Indicadores rápidos">
+      <article class="card kpiCard">
+        <div class="label">📅 Meses con pagos registrados</div>
+        <div class="value" id="kpiMonthsWithPayments">—</div>
+        <div class="hint">Cuenta los meses donde sí hubo movimiento de pago.</div>
+      </article>
+
+      <article class="card kpiCard">
+        <div class="label">📊 Promedio mensual histórico</div>
+        <div class="value" id="kpiAvgMonthlyAll">—</div>
+        <div class="hint">Promedio tomando todos los meses con pago.</div>
+      </article>
+
+      <article class="card kpiCard">
+        <div class="label">⚡ Promedio últimos 6 meses</div>
+        <div class="value" id="kpiAvgMonthly6">—</div>
+        <div class="hint">Sirve para una proyección más aterrizada.</div>
+      </article>
+
+      <article class="card kpiCard">
+        <div class="label">🎯 Meta mensual manual</div>
+        <div class="value" id="kpiMonthlyGoal">—</div>
+        <div class="hint">Útil si quieren simular una cuota fija hacia adelante.</div>
+      </article>
+    </section>
+
+    <!-- PROYECCIÓN -->
+    <section class="card block" aria-labelledby="tituloProyeccion">
+      <div class="blockHeader">
+        <div>
+          <p class="sectionKicker">Proyección</p>
+          <h2 id="tituloProyeccion">🔮 Estimación de finalización</h2>
+          <p class="muted tiny">
+            Esta fecha es referencial. Se calcula según el ritmo de pagos observado o la cuota manual que definan aquí.
+          </p>
+        </div>
+
+        <div class="pill" id="projectionPill" aria-live="polite">
+          📍 Estimación
+        </div>
+      </div>
+
+      <div class="controls">
+        <label class="control">
+          <span>Modo de cálculo</span>
+          <select id="projectionMode" aria-label="Modo de cálculo de proyección">
+            <option value="last_month_avg_6">📌 Promedio mensual (últimos 6 meses con pago)</option>
+            <option value="last_month">🧾 Usar el valor del último mes con pago</option>
+            <option value="all_month_avg">📊 Promedio mensual (todo el histórico)</option>
+            <option value="manual">✍️ Cuota mensual manual</option>
+          </select>
+        </label>
+
+        <label class="control" id="manualWrap">
+          <span>Cuota mensual manual</span>
+          <input
+            id="manualMonthly"
+            type="number"
+            min="0"
+            step="1000"
+            inputmode="numeric"
+            placeholder="Ej: 300000"
+            aria-describedby="manualMonthlyHelp"
+          />
+          <small class="muted tiny" id="manualMonthlyHelp">
+            Si definen una cuota fija, la fecha estimada se vuelve mucho más útil.
+          </small>
+        </label>
+
+        <div class="projectionResult" aria-label="Resultados de la proyección">
+          <div class="label">💰 Pago mensual usado</div>
+          <div class="value" id="monthlyUsed">$0</div>
+
+          <div class="label">⏳ Meses aproximados restantes</div>
+          <div class="value" id="monthsLeft">—</div>
+
+          <div class="label">🏁 Finalización estimada</div>
+          <div class="value" id="payoffDate">—</div>
+
+          <div class="miniProgress">
+            <div class="miniRow">
+              <span class="muted">Avance acumulado</span>
+              <strong id="miniPercent">—%</strong>
+            </div>
+
+            <div class="miniBar" aria-hidden="true">
+              <div class="miniFill" id="miniFill" style="width:0%"></div>
+            </div>
+
+            <div class="muted tiny" id="miniNote">
+              Mientras más constante sea el valor de los abonos, más confiable será esta proyección.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTÓRICO -->
+    <section class="card block" aria-labelledby="tituloHistorico">
+      <div class="blockHeader">
+        <div>
+          <p class="sectionKicker">Histórico</p>
+          <h2 id="tituloHistorico">📚 Registro de pagos</h2>
+          <p class="muted tiny">
+            Aquí pueden revisar cada abono, el acumulado total y cómo va bajando el saldo.
+          </p>
+        </div>
+
+        <div class="tableTools" aria-label="Filtros de búsqueda">
+          <input
+            id="search"
+            class="input"
+            type="search"
+            placeholder="🔎 Buscar por fecha, mes o valor"
+            aria-label="Buscar en el histórico"
+            autocomplete="off"
+          />
+
+          <select id="yearFilter" class="input" aria-label="Filtrar histórico por año">
+            <option value="">Todos los años</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tableWrap">
+        <table id="table" aria-label="Tabla histórica de pagos">
+          <thead>
+            <tr>
+              <th scope="col">Fecha</th>
+              <th scope="col">Mes</th>
+              <th scope="col" class="right">Valor</th>
+              <th scope="col" class="right">Acumulado</th>
+              <th scope="col" class="right">Saldo</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="statusRow">
+        <p class="muted tiny" id="status" aria-live="polite"></p>
+        <p class="muted tiny" id="lastUpdated">
+          🕓 Última actualización visual:
+          <span id="lastUpdatedValue">—</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- NOTA INFORMATIVA -->
+    <section class="card block infoPanel" aria-labelledby="tituloInfo">
+      <div class="blockHeader simple">
+        <div>
+          <p class="sectionKicker">Referencia</p>
+          <h2 id="tituloInfo">ℹ️ Cómo leer este panel</h2>
+        </div>
+      </div>
+
+      <div class="infoGrid">
+        <article class="infoItem">
+          <h3>Saldo pendiente</h3>
+          <p class="muted">
+            Es la diferencia entre el valor total del crédito y la suma de todos los pagos registrados.
+          </p>
+        </article>
+
+        <article class="infoItem">
+          <h3>Promedios</h3>
+          <p class="muted">
+            Se calculan únicamente con meses donde sí hubo pago. No adivina milagros financieros, solo hace cuentas.
+          </p>
+        </article>
+
+        <article class="infoItem">
+          <h3>Proyección</h3>
+          <p class="muted">
+            La fecha estimada cambia según el modo elegido. Si quieren un escenario concreto, usen la cuota manual.
+          </p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap footer muted">
+    Hecho para entender el crédito sin sufrir con hojas infinitas ni cuentas atravesadas. 🫠💛
+  </footer>
+
+  <script>
+    document.addEventListener("click", (e) => {
+      const t = e.target;
+      if (t && (t.tagName === "BUTTON" || t.tagName === "SELECT" || t.tagName === "INPUT")) {
+        t.classList.add("touched");
+        setTimeout(() => t.classList.remove("touched"), 250);
+      }
+    });
+  </script>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
