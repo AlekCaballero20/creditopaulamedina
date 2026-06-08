@@ -204,6 +204,64 @@
       </div>
     </section>
 
+
+    <!-- REGISTRO DE ABONOS -->
+    <section class="card block paymentBlock" aria-labelledby="tituloRegistrarPago">
+      <div class="blockHeader">
+        <div>
+          <p class="sectionKicker">Nuevo abono</p>
+          <h2 id="tituloRegistrarPago">➕ Registrar pago de cuota</h2>
+          <p class="muted tiny">
+            El valor aparece en $150.000 por defecto, pero pueden cambiarlo si ese mes se abona más.
+          </p>
+        </div>
+
+        <div class="pill">💵 Cuota editable</div>
+      </div>
+
+      <form id="paymentForm" class="paymentForm" autocomplete="off">
+        <label class="control">
+          <span>Fecha del pago</span>
+          <input id="paymentDate" class="input" type="date" required />
+        </label>
+
+        <label class="control">
+          <span>Mes de referencia</span>
+          <input
+            id="paymentMonth"
+            class="input"
+            type="text"
+            placeholder="Se completa automático si lo dejas vacío"
+          />
+          <small class="muted tiny">
+            Opcional. Si lo dejan vacío, se guarda el mes según la fecha elegida.
+          </small>
+        </label>
+
+        <label class="control">
+          <span>Valor abonado</span>
+          <input
+            id="paymentValue"
+            class="input"
+            type="number"
+            min="1000"
+            step="1000"
+            inputmode="numeric"
+            required
+          />
+        </label>
+
+        <div class="paymentActions">
+          <button id="paymentSubmit" class="btn primary" type="submit">
+            ✅ Guardar abono
+          </button>
+          <p class="muted tiny" id="paymentStatus" aria-live="polite">
+            Configura primero la URL de Apps Script en <strong>config.js</strong>.
+          </p>
+        </div>
+      </form>
+    </section>
+
     <!-- HISTÓRICO -->
     <section class="card block" aria-labelledby="tituloHistorico">
       <div class="blockHeader">

@@ -14,6 +14,20 @@ export const CONFIG = {
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vTQ4gxiZuFmAvTZBK3Jk7-bhxQkuvFm7hqdycT1QoSIsqFirjWGOXHwfsuBDiUIAZKRk8AG6oCOyxnq/pub?gid=0&single=true&output=tsv",
 
   /* =========================================================
+     WEB APP DE GOOGLE APPS SCRIPT
+     Pega aquí la URL final del despliegue terminado en /exec.
+     Si está configurada, el front lee datos frescos desde Apps Script
+     y también registra nuevos abonos desde el formulario.
+     ========================================================= */
+  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxiRDZO-hAGL2As5eg5dLZ9LiK-wmhaf39FmxkN3ff_YkyfH3_IFILjTfxPnPsRM5iWqw/exec",
+
+  /* =========================================================
+     VALOR PREDETERMINADO PARA REGISTRAR CUOTAS
+     El campo del front arranca en $150.000, pero queda editable.
+     ========================================================= */
+  DEFAULT_PAYMENT_AMOUNT: 150000,
+
+  /* =========================================================
      VALOR TOTAL DEL CRÉDITO
      ========================================================= */
   TOTAL_CREDITO: 4500000,
@@ -32,5 +46,5 @@ export const CONFIG = {
      CUOTA MANUAL SUGERIDA
      Solo se usa cuando el modo de proyección es "manual"
      ========================================================= */
-  DEFAULT_MANUAL_MONTHLY_PAYMENT: 300000,
+  DEFAULT_MANUAL_MONTHLY_PAYMENT: 150000,
 };

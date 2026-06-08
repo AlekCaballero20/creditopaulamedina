@@ -45,6 +45,14 @@ const el = {
   tableBody: $("table")?.querySelector("tbody"),
   status: $("status"),
   lastUpdatedValue: $("lastUpdatedValue"),
+
+  // registro de abonos
+  paymentForm: $("paymentForm"),
+  paymentDate: $("paymentDate"),
+  paymentMonth: $("paymentMonth"),
+  paymentValue: $("paymentValue"),
+  paymentSubmit: $("paymentSubmit"),
+  paymentStatus: $("paymentStatus"),
 };
 
 const STATE = {
@@ -71,6 +79,16 @@ function trySetControlDefaults() {
   if (el.manualMonthly) {
     el.manualMonthly.value = sanitizePositiveNumber(CONFIG.DEFAULT_MANUAL_MONTHLY_PAYMENT);
   }
+
+  if (el.paymentDate) {
+    el.paymentDate.value = todayInputValue();
+  }
+
+  if (el.paymentValue) {
+    el.paymentValue.value = sanitizePositiveNumber(CONFIG.DEFAULT_PAYMENT_AMOUNT || 150000);
+  }
+
+  updatePaymentStatusHint();
 }
 
 function bindEvents() {
@@ -89,6 +107,14 @@ function bindEvents() {
 
   el.search?.addEventListener("input", applyFilters);
   el.yearFilter?.addEventListener("change", applyFilters);
+
+  el.paymentForm?.addEventListener("submit", handlePaymentSubmit);
+
+  el.paymentDate?.addEventListener("change", () => {
+    if (!el.paymentMonth?.value.trim()) {
+      fillPaymentMonthFromDate();
+    }
+  });
 }
 
 async function load() {
@@ -101,8 +127,7 @@ async function load() {
   try {
     validateConfig();
 
-    const tsv = await fetchText(CONFIG.TSV_URL);
-    const parsedRows = parseTSV(tsv);
+    const parsedRows = await fetchPaymentRows();
 
     if (!parsedRows.length) {
       throw new Error("No se encontraron filas válidas en el TSV.");
@@ -138,13 +163,107 @@ function validateConfig() {
     throw new Error("CONFIG no existe o no es válida.");
   }
 
-  if (!CONFIG.TSV_URL || typeof CONFIG.TSV_URL !== "string") {
-    throw new Error("Falta CONFIG.TSV_URL.");
+  const hasTSV = Boolean(CONFIG.TSV_URL && typeof CONFIG.TSV_URL === "string");
+  const hasAppsScript = Boolean(CONFIG.APPS_SCRIPT_URL && typeof CONFIG.APPS_SCRIPT_URL === "string");
+
+  if (!hasTSV && !hasAppsScript) {
+    throw new Error("Falta CONFIG.TSV_URL o CONFIG.APPS_SCRIPT_URL.");
   }
 
   if (!Number.isFinite(Number(CONFIG.TOTAL_CREDITO)) || Number(CONFIG.TOTAL_CREDITO) <= 0) {
     throw new Error("CONFIG.TOTAL_CREDITO debe ser un número mayor a 0.");
   }
+}
+
+
+async function fetchPaymentRows() {
+  if (CONFIG.APPS_SCRIPT_URL && typeof CONFIG.APPS_SCRIPT_URL === "string") {
+    const data = await fetchJSONP(CONFIG.APPS_SCRIPT_URL, {
+      action: "data",
+      cacheBust: Date.now(),
+    });
+
+    if (!data?.ok) {
+      throw new Error(data?.error || "Apps Script no devolvió datos válidos.");
+    }
+
+    return normalizeApiRows(data.rows || []);
+  }
+
+  const tsv = await fetchText(CONFIG.TSV_URL);
+  return parseTSV(tsv);
+}
+
+function normalizeApiRows(apiRows) {
+  const rows = (apiRows || []).map((row, index) => {
+    const fechaStr = safeCell(row.fecha || row.Fecha);
+    const mesStr = safeCell(row.mes || row.Mes);
+    const valorStr = safeCell(row.valor ?? row.Valor ?? "");
+    const fecha = parseColDate(fechaStr);
+    const valor = parseCOP(valorStr);
+
+    return {
+      rowIndex: Number(row.rowIndex) || index + 2,
+      fechaStr,
+      mesStr,
+      valorStr,
+      fecha,
+      valor,
+    };
+  });
+
+  rows.sort(compareRowsByDateAsc);
+  return rows;
+}
+
+function fetchJSONP(baseUrl, params = {}, timeoutMs = 12000) {
+  return new Promise((resolve, reject) => {
+    const callbackName = `__creditoPaulaCallback_${Date.now()}_${Math.random()
+      .toString(36)
+      .slice(2)}`;
+
+    let done = false;
+    const script = document.createElement("script");
+    const url = new URL(baseUrl);
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        url.searchParams.set(key, value);
+      }
+    });
+    url.searchParams.set("callback", callbackName);
+
+    function cleanup() {
+      delete window[callbackName];
+      script.remove();
+    }
+
+    const timer = window.setTimeout(() => {
+      if (done) return;
+      done = true;
+      cleanup();
+      reject(new Error("Apps Script tardó demasiado en responder."));
+    }, timeoutMs);
+
+    window[callbackName] = (data) => {
+      if (done) return;
+      done = true;
+      window.clearTimeout(timer);
+      cleanup();
+      resolve(data);
+    };
+
+    script.onerror = () => {
+      if (done) return;
+      done = true;
+      window.clearTimeout(timer);
+      cleanup();
+      reject(new Error("No pude conectar con Apps Script."));
+    };
+
+    script.src = url.toString();
+    document.body.appendChild(script);
+  });
 }
 
 async function fetchText(url) {
@@ -590,6 +709,96 @@ function renderTable(rows) {
     .join("");
 }
 
+
+/* -----------------------------
+   Registro de abonos
+------------------------------ */
+
+async function handlePaymentSubmit(event) {
+  event.preventDefault();
+
+  const endpoint = String(CONFIG.APPS_SCRIPT_URL || "").trim();
+  if (!endpoint) {
+    setPaymentStatus("⚠️ Falta pegar la URL del Web App en config.js. Sin eso, el front mira bonito pero no escribe nada, que es muy poético y muy inútil.");
+    return;
+  }
+
+  const fecha = el.paymentDate?.value || todayInputValue();
+  const mes = String(el.paymentMonth?.value || "").trim();
+  const valor = sanitizePositiveNumber(el.paymentValue?.value || CONFIG.DEFAULT_PAYMENT_AMOUNT || 150000);
+
+  if (!fecha) {
+    setPaymentStatus("⚠️ Selecciona la fecha del pago.");
+    return;
+  }
+
+  if (valor <= 0) {
+    setPaymentStatus("⚠️ El valor del abono debe ser mayor a cero.");
+    return;
+  }
+
+  setPaymentLoading(true);
+  setPaymentStatus("⏳ Guardando abono...");
+
+  try {
+    await fetch(endpoint, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify({
+        action: "addPayment",
+        fecha,
+        mes,
+        valor,
+      }),
+    });
+
+    setPaymentStatus(`✅ Abono enviado: ${money(valor)}. Actualizando datos...`);
+
+    if (el.paymentValue) {
+      el.paymentValue.value = sanitizePositiveNumber(CONFIG.DEFAULT_PAYMENT_AMOUNT || 150000);
+    }
+    if (el.paymentMonth) {
+      el.paymentMonth.value = "";
+    }
+
+    window.setTimeout(() => {
+      load();
+    }, 1200);
+  } catch (err) {
+    console.error(err);
+    setPaymentStatus(`❌ No se pudo enviar el abono: ${humanizeError(err)}`);
+  } finally {
+    setPaymentLoading(false);
+  }
+}
+
+function setPaymentLoading(isLoading) {
+  if (!el.paymentSubmit) return;
+  el.paymentSubmit.disabled = isLoading;
+  el.paymentSubmit.textContent = isLoading ? "⏳ Guardando..." : "✅ Guardar abono";
+}
+
+function setPaymentStatus(message) {
+  safeSetText(el.paymentStatus, message);
+}
+
+function updatePaymentStatusHint() {
+  if (!el.paymentStatus) return;
+
+  if (CONFIG.APPS_SCRIPT_URL) {
+    setPaymentStatus("✅ Listo para registrar abonos desde el formulario.");
+  } else {
+    setPaymentStatus("Configura primero la URL de Apps Script en config.js.");
+  }
+}
+
+function fillPaymentMonthFromDate() {
+  if (!el.paymentDate || !el.paymentMonth) return;
+  const date = parseColDate(el.paymentDate.value);
+  if (!date) return;
+  el.paymentMonth.value = monthName(date);
+}
+
 /* -----------------------------
    Error / loading UI
 ------------------------------ */
@@ -739,6 +948,26 @@ function formatPct(pct) {
   if (!Number.isFinite(pct)) return "0";
   if (pct > 0 && pct < 10) return pct.toFixed(1);
   return String(Math.round(pct));
+}
+
+
+function todayInputValue() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function monthName(date) {
+  if (!isValidDate(date)) return "";
+
+  const months = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+  ];
+
+  return months[date.getMonth()];
 }
 
 function modeLabel(mode) {
