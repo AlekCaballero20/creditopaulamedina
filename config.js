@@ -22,15 +22,18 @@ export const CONFIG = {
   APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxiRDZO-hAGL2As5eg5dLZ9LiK-wmhaf39FmxkN3ff_YkyfH3_IFILjTfxPnPsRM5iWqw/exec",
 
   /* =========================================================
-     VALOR PREDETERMINADO PARA REGISTRAR CUOTAS
-     El campo del front arranca en $150.000, pero queda editable.
+     CONDICIONES REALES DEL CRÉDITO
+     El desembolso es el dinero recibido. El seguimiento usa el
+     compromiso total: 48 cuotas del crédito + seguros mensuales.
      ========================================================= */
-  DEFAULT_PAYMENT_AMOUNT: 150000,
+  DISBURSED_AMOUNT: 4500000,
+  TERM_MONTHS: 48,
+  LOAN_MONTHLY_PAYMENT: 148670,
+  LIFE_INSURANCE_MONTHLY: 6930,
+  EMPLOYMENT_INSURANCE_MONTHLY: 12636,
 
-  /* =========================================================
-     VALOR TOTAL DEL CRÉDITO
-     ========================================================= */
-  TOTAL_CREDITO: 4500000,
+  /* Valor sugerido al registrar un pago. Sigue siendo editable. */
+  DEFAULT_PAYMENT_AMOUNT: 168236,
 
   /* =========================================================
      PROYECCIÓN POR DEFECTO
@@ -40,11 +43,11 @@ export const CONFIG = {
      - "all_month_avg"
      - "manual"
      ========================================================= */
-  DEFAULT_PROJECTION_MODE: "last_month_avg_6",
+  DEFAULT_PROJECTION_MODE: "manual",
 
   /* =========================================================
      CUOTA MANUAL SUGERIDA
      Solo se usa cuando el modo de proyección es "manual"
      ========================================================= */
-  DEFAULT_MANUAL_MONTHLY_PAYMENT: 150000,
+  DEFAULT_MANUAL_MONTHLY_PAYMENT: 168236,
 };
