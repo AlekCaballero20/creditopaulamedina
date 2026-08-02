@@ -10,6 +10,12 @@ const el = {
   saldoRestante: $("saldoRestante"),
   ultimoPago: $("ultimoPago"),
   ultimoPagoValor: $("ultimoPagoValor"),
+  disbursedAmount: $("disbursedAmount"),
+  termMonths: $("termMonths"),
+  loanMonthlyPayment: $("loanMonthlyPayment"),
+  lifeInsuranceMonthly: $("lifeInsuranceMonthly"),
+  employmentInsuranceMonthly: $("employmentInsuranceMonthly"),
+  totalMonthlyPayment: $("totalMonthlyPayment"),
 
   // hero + progreso
   heroBadge: $("heroBadge"),
@@ -134,9 +140,10 @@ async function load() {
     }
 
     STATE.rawRows = parsedRows;
-    STATE.computedRows = buildComputedRows(parsedRows, CONFIG.TOTAL_CREDITO);
+    const financialTerms = getFinancialTerms();
+    STATE.computedRows = buildComputedRows(parsedRows, financialTerms.totalCommitment);
     STATE.monthTotals = buildMonthlyTotals(STATE.computedRows);
-    STATE.summary = buildSummary(STATE.computedRows, CONFIG.TOTAL_CREDITO);
+    STATE.summary = buildSummary(STATE.computedRows, financialTerms.totalCommitment);
 
     renderAll();
 
@@ -170,8 +177,9 @@ function validateConfig() {
     throw new Error("Falta CONFIG.TSV_URL o CONFIG.APPS_SCRIPT_URL.");
   }
 
-  if (!Number.isFinite(Number(CONFIG.TOTAL_CREDITO)) || Number(CONFIG.TOTAL_CREDITO) <= 0) {
-    throw new Error("CONFIG.TOTAL_CREDITO debe ser un número mayor a 0.");
+  const financialTerms = getFinancialTerms();
+  if (financialTerms.totalCommitment <= 0) {
+    throw new Error("Las condiciones financieras configuradas deben producir un compromiso total mayor a 0.");
   }
 }
 
@@ -413,6 +421,25 @@ function isValidDate(d) {
    Compute
 ------------------------------ */
 
+function getFinancialTerms() {
+  const disbursedAmount = sanitizePositiveNumber(CONFIG.DISBURSED_AMOUNT);
+  const termMonths = Math.floor(sanitizePositiveNumber(CONFIG.TERM_MONTHS));
+  const loanMonthlyPayment = sanitizePositiveNumber(CONFIG.LOAN_MONTHLY_PAYMENT);
+  const lifeInsuranceMonthly = sanitizePositiveNumber(CONFIG.LIFE_INSURANCE_MONTHLY);
+  const employmentInsuranceMonthly = sanitizePositiveNumber(CONFIG.EMPLOYMENT_INSURANCE_MONTHLY);
+  const totalMonthlyPayment = loanMonthlyPayment + lifeInsuranceMonthly + employmentInsuranceMonthly;
+
+  return {
+    disbursedAmount,
+    termMonths,
+    loanMonthlyPayment,
+    lifeInsuranceMonthly,
+    employmentInsuranceMonthly,
+    totalMonthlyPayment,
+    totalCommitment: totalMonthlyPayment * termMonths,
+  };
+}
+
 function buildComputedRows(rows, totalCredito) {
   let acumulado = 0;
   const total = Number(totalCredito) || 0;
@@ -494,6 +521,7 @@ function getProjectionMonthlyValue(mode) {
 ------------------------------ */
 
 function renderAll() {
+  renderFinancialTerms();
   renderSummary();
   renderProgress();
   renderKpis();
@@ -1004,4 +1032,14 @@ function animateWidth(node, targetPct) {
   }
 
   requestAnimationFrame(step);
+}
+
+function renderFinancialTerms() {
+  const terms = getFinancialTerms();
+  safeSetText(el.disbursedAmount, money(terms.disbursedAmount));
+  safeSetText(el.termMonths, `${terms.termMonths} meses`);
+  safeSetText(el.loanMonthlyPayment, money(terms.loanMonthlyPayment));
+  safeSetText(el.lifeInsuranceMonthly, money(terms.lifeInsuranceMonthly));
+  safeSetText(el.employmentInsuranceMonthly, money(terms.employmentInsuranceMonthly));
+  safeSetText(el.totalMonthlyPayment, money(terms.totalMonthlyPayment));
 }

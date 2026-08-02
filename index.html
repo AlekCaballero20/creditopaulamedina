@@ -19,8 +19,8 @@
       <p class="eyebrow">Control financiero</p>
       <h1>💳 Crédito Paula Medina</h1>
       <p class="muted headerLead">
-        Seguimiento claro del crédito, con avance total, saldo pendiente, pagos históricos
-        y una estimación de finalización basada en los abonos registrados.
+        Seguimiento claro de la obligación completa: cuota, seguros, avance total,
+        saldo pendiente y una estimación de finalización basada en los abonos registrados.
       </p>
     </div>
 
@@ -39,7 +39,7 @@
           <p class="sectionKicker">Resumen general</p>
           <h2 class="heroTitle" id="tituloResumen">📌 Estado actual del crédito</h2>
           <p class="muted heroSub">
-            Este panel se alimenta automáticamente desde el histórico publicado en la hoja.
+            Incluye la cuota fija y los seguros mensuales asociados al crédito.
           </p>
         </div>
 
@@ -73,16 +73,16 @@
 
           <div class="heroNote">
             <p class="muted tiny">
-              El porcentaje se calcula usando el valor total configurado del crédito y la suma de todos los abonos encontrados.
+              El porcentaje se calcula frente al compromiso contractual total: 48 cuotas, incluidos los seguros mensuales.
             </p>
           </div>
         </div>
 
         <div class="heroKpis" aria-label="Indicadores principales del crédito">
           <article class="kpi">
-            <div class="kpiLabel">💰 Valor total del crédito</div>
+            <div class="kpiLabel">💳 Compromiso total estimado</div>
             <div class="kpiValue" id="totalCredito">$0</div>
-            <div class="kpiHint">Monto base configurado para el seguimiento.</div>
+            <div class="kpiHint">48 cuotas con crédito y seguros incluidos.</div>
           </article>
 
           <article class="kpi">
@@ -92,9 +92,9 @@
           </article>
 
           <article class="kpi">
-            <div class="kpiLabel">🧾 Saldo pendiente</div>
+            <div class="kpiLabel">🧾 Saldo estimado</div>
             <div class="kpiValue" id="saldoRestante">$0</div>
-            <div class="kpiHint">Lo que aún falta por cubrir.</div>
+            <div class="kpiHint">Por cubrir del compromiso contractual.</div>
           </article>
 
           <article class="kpi">
@@ -103,6 +103,25 @@
             <div class="kpiHint" id="ultimoPagoValor"></div>
           </article>
         </div>
+      </div>
+    </section>
+
+    <section class="card block termsPanel" aria-labelledby="tituloCondiciones">
+      <div class="blockHeader simple">
+        <div>
+          <p class="sectionKicker">Condiciones confirmadas</p>
+          <h2 id="tituloCondiciones">📄 Costo real del crédito</h2>
+          <p class="muted tiny">Datos del desembolso del 08/09/2025. Los seguros se cobran cada mes junto con la cuota.</p>
+        </div>
+      </div>
+
+      <div class="termsGrid">
+        <article class="infoItem"><h3>Desembolsado</h3><p class="termValue" id="disbursedAmount">—</p><p class="muted tiny">Dinero recibido.</p></article>
+        <article class="infoItem"><h3>Plazo</h3><p class="termValue" id="termMonths">—</p><p class="muted tiny">Cuotas mensuales.</p></article>
+        <article class="infoItem"><h3>Cuota del crédito</h3><p class="termValue" id="loanMonthlyPayment">—</p><p class="muted tiny">Tasa fija: 1,39 % mes vencido.</p></article>
+        <article class="infoItem"><h3>Seguro de vida</h3><p class="termValue" id="lifeInsuranceMonthly">—</p><p class="muted tiny">Cobro mensual.</p></article>
+        <article class="infoItem"><h3>Empleado protegido</h3><p class="termValue" id="employmentInsuranceMonthly">—</p><p class="muted tiny">Cobro mensual.</p></article>
+        <article class="infoItem emphasis"><h3>Débito mensual real</h3><p class="termValue" id="totalMonthlyPayment">—</p><p class="muted tiny">Cuota + ambos seguros.</p></article>
       </div>
     </section>
 
@@ -212,7 +231,7 @@
           <p class="sectionKicker">Nuevo abono</p>
           <h2 id="tituloRegistrarPago">➕ Registrar pago de cuota</h2>
           <p class="muted tiny">
-            El valor aparece en $150.000 por defecto, pero pueden cambiarlo si ese mes se abona más.
+            El valor aparece con el débito mensual real ($168.236), pero pueden cambiarlo si ese mes se abona más o menos.
           </p>
         </div>
 
@@ -239,7 +258,7 @@
         </label>
 
         <label class="control">
-          <span>Valor abonado</span>
+          <span>Valor pagado total</span>
           <input
             id="paymentValue"
             class="input"
@@ -297,7 +316,7 @@
               <th scope="col">Mes</th>
               <th scope="col" class="right">Valor</th>
               <th scope="col" class="right">Acumulado</th>
-              <th scope="col" class="right">Saldo</th>
+              <th scope="col" class="right">Saldo estimado</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -326,7 +345,7 @@
         <article class="infoItem">
           <h3>Saldo pendiente</h3>
           <p class="muted">
-            Es la diferencia entre el valor total del crédito y la suma de todos los pagos registrados.
+            Es la diferencia entre el compromiso contractual estimado y la suma de todos los pagos registrados. No representa el saldo exacto de capital que reporte el banco.
           </p>
         </article>
 
@@ -340,7 +359,7 @@
         <article class="infoItem">
           <h3>Proyección</h3>
           <p class="muted">
-            La fecha estimada cambia según el modo elegido. Si quieren un escenario concreto, usen la cuota manual.
+            La fecha estimada cambia según el modo elegido. Para seguir el contrato, usen como cuota manual el débito mensual real de $168.236.
           </p>
         </article>
       </div>
