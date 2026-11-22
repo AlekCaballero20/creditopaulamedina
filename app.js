@@ -21,8 +21,6 @@ const el = {
   heroBadge: $("heroBadge"),
   progressPercent: $("progressPercent"),
   progressFill: $("progressFill"),
-  progressPaid: $("progressPaid"),
-  progressLeft: $("progressLeft"),
 
   // kpis
   kpiMonthsWithPayments: $("kpiMonthsWithPayments"),
@@ -40,8 +38,6 @@ const el = {
   projectionPill: $("projectionPill"),
 
   // mini progreso
-  miniPercent: $("miniPercent"),
-  miniFill: $("miniFill"),
   miniNote: $("miniNote"),
 
   // histórico
@@ -128,7 +124,8 @@ async function load() {
 
   STATE.loading = true;
   setLoadingState(true);
-  setStatus("📥 Cargando datos del crédito...");
+  safeSetText($("syncStatus"), "Consultando pagos…");
+  setStatus("Cargando historial…");
 
   try {
     validateConfig();
@@ -148,12 +145,14 @@ async function load() {
     renderAll();
 
     setLastUpdatedNow();
+    safeSetText($("syncStatus"), "Datos actualizados");
     setStatus(
       `✅ Listo. Registros: ${STATE.computedRows.length}. Meses con pago: ${STATE.monthTotals.length}.`
     );
   } catch (err) {
     console.error(err);
     clearUIOnError();
+    safeSetText($("syncStatus"), "No se pudieron cargar los pagos");
     setStatus(`❌ ${humanizeError(err)}`);
   } finally {
     STATE.loading = false;
@@ -530,6 +529,16 @@ function renderAll() {
   renderProjection();
 }
 
+function renderFinancialTerms() {
+  const terms = getFinancialTerms();
+  safeSetText(el.disbursedAmount, money(terms.disbursedAmount));
+  safeSetText(el.termMonths, `${terms.termMonths} meses`);
+  safeSetText(el.loanMonthlyPayment, money(terms.loanMonthlyPayment));
+  safeSetText(el.lifeInsuranceMonthly, money(terms.lifeInsuranceMonthly));
+  safeSetText(el.employmentInsuranceMonthly, money(terms.employmentInsuranceMonthly));
+  safeSetText(el.totalMonthlyPayment, money(terms.totalMonthlyPayment));
+}
+
 function renderSummary() {
   const summary = STATE.summary;
   if (!summary) return;
@@ -540,18 +549,18 @@ function renderSummary() {
 
   if (summary.last) {
     safeSetText(el.ultimoPago, fmtDate(summary.last.fecha));
-    safeSetText(el.ultimoPagoValor, `Valor: ${money(summary.last.valor)} 💵`);
+    safeSetText(el.ultimoPagoValor, `${money(summary.last.valor)}`);
   } else {
     safeSetText(el.ultimoPago, "—");
     safeSetText(el.ultimoPagoValor, "Aún no hay pagos válidos registrados.");
   }
 
   if (summary.saldo <= 0) {
-    safeSetText(el.heroBadge, "🎉 ¡Pagado!");
+    safeSetText(el.heroBadge, "Pagado");
   } else if (summary.totalAbonado <= 0) {
-    safeSetText(el.heroBadge, "🕗 Sin abonos");
+    safeSetText(el.heroBadge, "Sin abonos");
   } else {
-    safeSetText(el.heroBadge, "⏳ En curso");
+    safeSetText(el.heroBadge, "En curso");
   }
 }
 
@@ -561,16 +570,11 @@ function renderProgress() {
 
   const total = sanitizePositiveNumber(summary.totalCredito);
   const paid = sanitizePositiveNumber(summary.totalAbonado);
-  const left = Math.max(0, sanitizePositiveNumber(summary.saldo));
   const pct = total > 0 ? clamp((paid / total) * 100, 0, 100) : 0;
 
   safeSetText(el.progressPercent, `${formatPct(pct)}%`);
-  safeSetText(el.progressPaid, money(paid));
-  safeSetText(el.progressLeft, money(left));
-  safeSetText(el.miniPercent, `${formatPct(pct)}%`);
 
   animateWidth(el.progressFill, pct);
-  animateWidth(el.miniFill, pct);
 
   const pb = document.querySelector(".progressBar");
   if (pb) {
@@ -610,7 +614,7 @@ function renderProjection() {
   const monthly = getProjectionMonthlyValue(mode);
 
   if (el.manualWrap) {
-    el.manualWrap.style.display = mode === "manual" ? "flex" : "none";
+    el.manualWrap.hidden = mode !== "manual";
   }
 
   safeSetText(el.monthlyUsed, money(monthly));
@@ -618,8 +622,8 @@ function renderProjection() {
 
   if (saldo <= 0) {
     safeSetText(el.monthsLeft, "0");
-    safeSetText(el.payoffDate, "🎉 Ya quedó pagado");
-    safeSetText(el.miniNote, "Listo. Este crédito ya no les está respirando en la nuca ✨");
+    safeSetText(el.payoffDate, "Crédito cubierto");
+    safeSetText(el.miniNote, "Los pagos registrados cubren el compromiso estimado.");
     return;
   }
 
@@ -628,7 +632,7 @@ function renderProjection() {
     safeSetText(el.payoffDate, "—");
     safeSetText(
       el.miniNote,
-      "No hay base suficiente para proyectar. Usen una cuota manual y listo, humanidad resuelta por un rato ✍️"
+      "Se necesita un pago registrado y un importe mensual para estimar el cierre."
     );
     return;
   }
@@ -641,17 +645,9 @@ function renderProjection() {
   const payoffDate = addMonths(lastMonthDate, monthsLeft);
 
   safeSetText(el.monthsLeft, String(monthsLeft));
-  safeSetText(el.payoffDate, `🏁 ${fmtMonthYear(payoffDate)}`);
+  safeSetText(el.payoffDate, `${fmtMonthYear(payoffDate)}`);
 
-  if (monthsLeft <= 3) {
-    safeSetText(el.miniNote, "Ya casi. Un empujoncito más y sale de sus vidas 💫");
-  } else if (monthsLeft <= 6) {
-    safeSetText(el.miniNote, "Ya falta poquito. Si sostienen el ritmo, esto se acaba pronto ✅");
-  } else if (monthsLeft <= 18) {
-    safeSetText(el.miniNote, "Va bien. Mantener constancia es más poderoso que improvisar cada mes 💪");
-  } else {
-    safeSetText(el.miniNote, "Todavía le falta camino, pero ya hay avance real. Paso a paso, que así pagan casi todos los mortales 🧡");
-  }
+  safeSetText(el.miniNote, `La estimación parte del último mes con pagos (${fmtMonthYear(lastMonthDate)}).`);
 }
 
 /* -----------------------------
@@ -814,7 +810,7 @@ function updatePaymentStatusHint() {
   if (!el.paymentStatus) return;
 
   if (CONFIG.APPS_SCRIPT_URL) {
-    setPaymentStatus("✅ Listo para registrar abonos desde el formulario.");
+    setPaymentStatus("");
   } else {
     setPaymentStatus("Configura primero la URL de Apps Script en config.js.");
   }
@@ -835,20 +831,18 @@ function setLoadingState(isLoading) {
   if (el.btnReload) {
     el.btnReload.disabled = isLoading;
     el.btnReload.setAttribute("aria-busy", String(isLoading));
-    el.btnReload.textContent = isLoading ? "⏳ Cargando..." : "🔄 Actualizar";
+    el.btnReload.textContent = isLoading ? "Consultando…" : "↻ Actualizar datos";
   }
 }
 
 function clearUIOnError() {
-  safeSetText(el.heroBadge, "⚠️ Error");
+  safeSetText(el.heroBadge, "Sin datos");
   safeSetText(el.totalCredito, "—");
   safeSetText(el.totalAbonado, "—");
   safeSetText(el.saldoRestante, "—");
   safeSetText(el.ultimoPago, "—");
   safeSetText(el.ultimoPagoValor, "");
   safeSetText(el.progressPercent, "—%");
-  safeSetText(el.progressPaid, "—");
-  safeSetText(el.progressLeft, "—");
   safeSetText(el.kpiMonthsWithPayments, "—");
   safeSetText(el.kpiAvgMonthlyAll, "—");
   safeSetText(el.kpiAvgMonthly6, "—");
@@ -856,12 +850,12 @@ function clearUIOnError() {
   safeSetText(el.monthlyUsed, "—");
   safeSetText(el.monthsLeft, "—");
   safeSetText(el.payoffDate, "—");
-  safeSetText(el.projectionPill, "⚠️ Sin datos");
-  safeSetText(el.miniPercent, "—%");
+  safeSetText(el.projectionPill, "Sin datos");
   safeSetText(el.miniNote, "No se pudo calcular la proyección.");
 
   animateWidth(el.progressFill, 0);
-  animateWidth(el.miniFill, 0);
+  document.querySelector(".progressBar")?.setAttribute("aria-valuenow", "0");
+  safeSetText($("lastUpdatedValue"), "—");
 
   if (el.tableBody) {
     el.tableBody.innerHTML = `
@@ -1032,14 +1026,4 @@ function animateWidth(node, targetPct) {
   }
 
   requestAnimationFrame(step);
-}
-
-function renderFinancialTerms() {
-  const terms = getFinancialTerms();
-  safeSetText(el.disbursedAmount, money(terms.disbursedAmount));
-  safeSetText(el.termMonths, `${terms.termMonths} meses`);
-  safeSetText(el.loanMonthlyPayment, money(terms.loanMonthlyPayment));
-  safeSetText(el.lifeInsuranceMonthly, money(terms.lifeInsuranceMonthly));
-  safeSetText(el.employmentInsuranceMonthly, money(terms.employmentInsuranceMonthly));
-  safeSetText(el.totalMonthlyPayment, money(terms.totalMonthlyPayment));
 }

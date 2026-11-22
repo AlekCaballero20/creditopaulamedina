@@ -4,113 +4,83 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="Control de pagos del crédito de Paula Medina. Visualiza avance, saldo pendiente, histórico y fecha estimada de finalización." />
-  <meta name="theme-color" content="#f6f7fb" />
+  <meta name="theme-color" content="#f6f4f0" />
 
   <title>Crédito Paula Medina · Control de Pagos</title>
 
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./styles.css?v=2" />
 </head>
 
 <body>
   <a href="#contenido" class="skipLink">Saltar al contenido</a>
 
-  <header class="wrap header" role="banner">
-    <div class="headerIntro">
-      <p class="eyebrow">Control financiero</p>
-      <h1>💳 Crédito Paula Medina</h1>
-      <p class="muted headerLead">
-        Seguimiento claro de la obligación completa: cuota, seguros, avance total,
-        saldo pendiente y una estimación de finalización basada en los abonos registrados.
-      </p>
-    </div>
-
-    <div class="headerActions">
-      <button id="btnReload" class="btn" type="button" title="Actualizar datos del crédito" aria-label="Actualizar datos">
-        🔄 Actualizar
-      </button>
-    </div>
+  <header class="wrap header">
+    <a class="brand" href="./"><span class="brandMark" aria-hidden="true">P</span> Crédito Paula Medina</a>
+    <button id="btnReload" class="btn" type="button"><span aria-hidden="true">↻</span> Actualizar datos</button>
   </header>
 
   <main id="contenido" class="wrap" tabindex="-1">
-    <!-- HERO / RESUMEN PRINCIPAL -->
-    <section class="card block hero" aria-labelledby="tituloResumen">
-      <div class="heroTop">
-        <div>
-          <p class="sectionKicker">Resumen general</p>
-          <h2 class="heroTitle" id="tituloResumen">📌 Estado actual del crédito</h2>
-          <p class="muted heroSub">
-            Incluye la cuota fija y los seguros mensuales asociados al crédito.
-          </p>
-        </div>
-
-        <div class="heroBadge" id="heroBadge" title="Estado del crédito" aria-live="polite">
-          ⏳ En curso
-        </div>
+    <div class="intro">
+      <div>
+        <h1>Estado del crédito</h1>
+        <p class="muted">Seguimiento de pagos en pesos colombianos (COP)</p>
       </div>
+      <p class="sync muted" id="syncStatus" role="status">Consultando pagos…</p>
+    </div>
 
-      <div class="heroGrid">
-        <div class="heroProgress" aria-label="Progreso general del crédito">
-          <div class="progressHeader">
-            <div class="progressLabel">Avance del pago</div>
-            <div class="progressPercent" id="progressPercent" aria-live="polite">—%</div>
-          </div>
+    <nav class="sectionNav" aria-label="Secciones del crédito">
+      <a href="#condiciones">Condiciones</a>
+      <a href="#proyeccion">Proyección</a>
+      <a href="#registrar">Registrar pago</a>
+      <a href="#historial">Historial</a>
+    </nav>
 
-          <div
-            class="progressBar"
-            role="progressbar"
-            aria-label="Porcentaje pagado del crédito"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            aria-valuenow="0"
-          >
-            <div class="progressFill" id="progressFill" style="width:0%"></div>
-          </div>
-
-          <div class="progressFoot">
-            <span class="muted">Abonado: <strong id="progressPaid">$0</strong></span>
-            <span class="muted">Restante: <strong id="progressLeft">$0</strong></span>
-          </div>
-
-          <div class="heroNote">
-            <p class="muted tiny">
-              El porcentaje se calcula frente al compromiso contractual total: 48 cuotas, incluidos los seguros mensuales.
-            </p>
-          </div>
+    <section class="heroGrid" aria-label="Resumen del crédito">
+      <article class="heroProgress">
+        <div class="heroTop">
+          <h2>Saldo contractual estimado</h2>
+          <span class="heroBadge" id="heroBadge" aria-live="polite">—</span>
         </div>
-
-        <div class="heroKpis" aria-label="Indicadores principales del crédito">
-          <article class="kpi">
-            <div class="kpiLabel">💳 Compromiso total estimado</div>
-            <div class="kpiValue" id="totalCredito">$0</div>
-            <div class="kpiHint">48 cuotas con crédito y seguros incluidos.</div>
-          </article>
-
-          <article class="kpi">
-            <div class="kpiLabel">✅ Total abonado</div>
-            <div class="kpiValue" id="totalAbonado">$0</div>
-            <div class="kpiHint">Suma de todos los pagos registrados.</div>
-          </article>
-
-          <article class="kpi">
-            <div class="kpiLabel">🧾 Saldo estimado</div>
-            <div class="kpiValue" id="saldoRestante">$0</div>
-            <div class="kpiHint">Por cubrir del compromiso contractual.</div>
-          </article>
-
-          <article class="kpi">
-            <div class="kpiLabel">🕒 Último pago registrado</div>
-            <div class="kpiValue" id="ultimoPago">—</div>
-            <div class="kpiHint" id="ultimoPagoValor"></div>
-          </article>
+        <p class="balanceValue" id="saldoRestante">—</p>
+        <p class="balanceNote">Compromiso total con seguros menos los pagos registrados.</p>
+        <div class="progressHeader">
+          <span>Avance del pago</span>
+          <strong id="progressPercent">—</strong>
         </div>
+        <div class="progressBar" role="progressbar" aria-label="Porcentaje pagado del crédito"
+             aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="progressFill" id="progressFill" style="width:0%"></div>
+        </div>
+      </article>
+
+      <div class="heroKpis">
+        <article class="card kpi">
+          <h2 class="kpiLabel">Compromiso total</h2>
+          <p class="kpiValue" id="totalCredito">—</p>
+          <p class="muted tiny">48 cuotas con seguros</p>
+        </article>
+        <article class="card kpi">
+          <h2 class="kpiLabel">Total abonado</h2>
+          <p class="kpiValue" id="totalAbonado">—</p>
+          <p class="muted tiny">Pagos registrados</p>
+        </article>
+        <article class="card kpi">
+          <h2 class="kpiLabel">Último pago</h2>
+          <p class="kpiValue" id="ultimoPago">—</p>
+          <p class="muted tiny" id="ultimoPagoValor"></p>
+        </article>
+        <article class="card kpi emphasis">
+          <h2 class="kpiLabel">Débito mensual</h2>
+          <p class="kpiValue" id="totalMonthlyPayment">—</p>
+          <p class="muted tiny">Cuota más ambos seguros</p>
+        </article>
       </div>
     </section>
 
-    <section class="card block termsPanel" aria-labelledby="tituloCondiciones">
+    <section class="card block" id="condiciones" aria-labelledby="tituloCondiciones">
       <div class="blockHeader simple">
         <div>
-          <p class="sectionKicker">Condiciones confirmadas</p>
-          <h2 id="tituloCondiciones">📄 Costo real del crédito</h2>
+          <h2 id="tituloCondiciones">Costo real del crédito</h2>
           <p class="muted tiny">Datos del desembolso del 08/09/2025. Los seguros se cobran cada mes junto con la cuota.</p>
         </div>
       </div>
@@ -121,121 +91,103 @@
         <article class="infoItem"><h3>Cuota del crédito</h3><p class="termValue" id="loanMonthlyPayment">—</p><p class="muted tiny">Tasa fija: 1,39 % mes vencido.</p></article>
         <article class="infoItem"><h3>Seguro de vida</h3><p class="termValue" id="lifeInsuranceMonthly">—</p><p class="muted tiny">Cobro mensual.</p></article>
         <article class="infoItem"><h3>Empleado protegido</h3><p class="termValue" id="employmentInsuranceMonthly">—</p><p class="muted tiny">Cobro mensual.</p></article>
-        <article class="infoItem emphasis"><h3>Débito mensual real</h3><p class="termValue" id="totalMonthlyPayment">—</p><p class="muted tiny">Cuota + ambos seguros.</p></article>
       </div>
     </section>
 
     <!-- INDICADORES RÁPIDOS -->
     <section class="grid cards" aria-label="Indicadores rápidos">
       <article class="card kpiCard">
-        <div class="label">📅 Meses con pagos registrados</div>
+        <div class="label">Meses con pagos registrados</div>
         <div class="value" id="kpiMonthsWithPayments">—</div>
         <div class="hint">Cuenta los meses donde sí hubo movimiento de pago.</div>
       </article>
 
       <article class="card kpiCard">
-        <div class="label">📊 Promedio mensual histórico</div>
+        <div class="label">Promedio mensual histórico</div>
         <div class="value" id="kpiAvgMonthlyAll">—</div>
         <div class="hint">Promedio tomando todos los meses con pago.</div>
       </article>
 
       <article class="card kpiCard">
-        <div class="label">⚡ Promedio últimos 6 meses</div>
+        <div class="label">Promedio últimos 6 meses</div>
         <div class="value" id="kpiAvgMonthly6">—</div>
         <div class="hint">Sirve para una proyección más aterrizada.</div>
       </article>
 
       <article class="card kpiCard">
-        <div class="label">🎯 Meta mensual manual</div>
+        <div class="label">Cuota mensual personalizada</div>
         <div class="value" id="kpiMonthlyGoal">—</div>
-        <div class="hint">Útil si quieren simular una cuota fija hacia adelante.</div>
+        <div class="hint">Valor editable en la proyección.</div>
       </article>
     </section>
 
     <!-- PROYECCIÓN -->
-    <section class="card block" aria-labelledby="tituloProyeccion">
+    <section class="card block" id="proyeccion" aria-labelledby="tituloProyeccion">
       <div class="blockHeader">
         <div>
-          <p class="sectionKicker">Proyección</p>
-          <h2 id="tituloProyeccion">🔮 Estimación de finalización</h2>
+          <h2 id="tituloProyeccion">Estimación de finalización</h2>
           <p class="muted tiny">
-            Esta fecha es referencial. Se calcula según el ritmo de pagos observado o la cuota manual que definan aquí.
+            Simula cuánto tardarías en cubrir el saldo registrado.
           </p>
         </div>
 
         <div class="pill" id="projectionPill" aria-live="polite">
-          📍 Estimación
+          Estimación
         </div>
       </div>
 
-      <div class="controls">
-        <label class="control">
-          <span>Modo de cálculo</span>
-          <select id="projectionMode" aria-label="Modo de cálculo de proyección">
-            <option value="last_month_avg_6">📌 Promedio mensual (últimos 6 meses con pago)</option>
-            <option value="last_month">🧾 Usar el valor del último mes con pago</option>
-            <option value="all_month_avg">📊 Promedio mensual (todo el histórico)</option>
-            <option value="manual">✍️ Cuota mensual manual</option>
-          </select>
-        </label>
+      <div class="projectionLayout">
+        <div class="controls">
+          <label class="control">
+            <span>Modo de cálculo</span>
+            <select id="projectionMode" aria-label="Modo de cálculo de proyección">
+              <option value="last_month_avg_6">Promedio mensual (últimos 6 meses con pago)</option>
+              <option value="last_month">Usar el valor del último mes con pago</option>
+              <option value="all_month_avg">Promedio mensual (todo el histórico)</option>
+              <option value="manual">Cuota mensual manual</option>
+            </select>
+          </label>
 
-        <label class="control" id="manualWrap">
-          <span>Cuota mensual manual</span>
-          <input
-            id="manualMonthly"
-            type="number"
-            min="0"
-            step="1000"
-            inputmode="numeric"
-            placeholder="Ej: 300000"
-            aria-describedby="manualMonthlyHelp"
-          />
-          <small class="muted tiny" id="manualMonthlyHelp">
-            Si definen una cuota fija, la fecha estimada se vuelve mucho más útil.
-          </small>
-        </label>
+          <label class="control" id="manualWrap" hidden>
+            <span>Cuota mensual manual</span>
+            <input
+              id="manualMonthly"
+              type="number"
+              min="0"
+              step="1"
+              inputmode="numeric"
+              placeholder="Ej: 300000"
+              aria-describedby="manualMonthlyHelp"
+            />
+            <small class="muted tiny" id="manualMonthlyHelp">
+              Ingresa un valor mensual en pesos.
+            </small>
+          </label>
+        </div>
 
         <div class="projectionResult" aria-label="Resultados de la proyección">
-          <div class="label">💰 Pago mensual usado</div>
-          <div class="value" id="monthlyUsed">$0</div>
+          <div><div class="label">Pago mensual usado</div><div class="value" id="monthlyUsed">—</div></div>
 
-          <div class="label">⏳ Meses aproximados restantes</div>
-          <div class="value" id="monthsLeft">—</div>
+          <div><div class="label">Meses restantes</div><div class="value" id="monthsLeft">—</div></div>
 
-          <div class="label">🏁 Finalización estimada</div>
-          <div class="value" id="payoffDate">—</div>
+          <div><div class="label">Finalización estimada</div><div class="value" id="payoffDate">—</div></div>
 
-          <div class="miniProgress">
-            <div class="miniRow">
-              <span class="muted">Avance acumulado</span>
-              <strong id="miniPercent">—%</strong>
-            </div>
-
-            <div class="miniBar" aria-hidden="true">
-              <div class="miniFill" id="miniFill" style="width:0%"></div>
-            </div>
-
-            <div class="muted tiny" id="miniNote">
-              Mientras más constante sea el valor de los abonos, más confiable será esta proyección.
-            </div>
-          </div>
+          <p class="muted tiny" id="miniNote"></p>
         </div>
       </div>
     </section>
 
 
     <!-- REGISTRO DE ABONOS -->
-    <section class="card block paymentBlock" aria-labelledby="tituloRegistrarPago">
+    <section class="card block" id="registrar" aria-labelledby="tituloRegistrarPago">
       <div class="blockHeader">
         <div>
-          <p class="sectionKicker">Nuevo abono</p>
-          <h2 id="tituloRegistrarPago">➕ Registrar pago de cuota</h2>
+          <h2 id="tituloRegistrarPago">Registrar pago de cuota</h2>
           <p class="muted tiny">
-            El valor aparece con el débito mensual real ($168.236), pero pueden cambiarlo si ese mes se abona más o menos.
+            El importe sugerido incluye la cuota y los seguros. Puedes ajustar el valor al pago real.
           </p>
         </div>
 
-        <div class="pill">💵 Cuota editable</div>
       </div>
 
       <form id="paymentForm" class="paymentForm" autocomplete="off">
@@ -250,7 +202,7 @@
             id="paymentMonth"
             class="input"
             type="text"
-            placeholder="Se completa automático si lo dejas vacío"
+            placeholder="Ej. noviembre"
           />
           <small class="muted tiny">
             Opcional. Si lo dejan vacío, se guarda el mes según la fecha elegida.
@@ -264,7 +216,7 @@
             class="input"
             type="number"
             min="1000"
-            step="1000"
+            step="1"
             inputmode="numeric"
             required
           />
@@ -272,7 +224,7 @@
 
         <div class="paymentActions">
           <button id="paymentSubmit" class="btn primary" type="submit">
-            ✅ Guardar abono
+            Guardar abono
           </button>
           <p class="muted tiny" id="paymentStatus" aria-live="polite">
             Configura primero la URL de Apps Script en <strong>config.js</strong>.
@@ -282,11 +234,10 @@
     </section>
 
     <!-- HISTÓRICO -->
-    <section class="card block" aria-labelledby="tituloHistorico">
+    <section class="card block" id="historial" aria-labelledby="tituloHistorico">
       <div class="blockHeader">
         <div>
-          <p class="sectionKicker">Histórico</p>
-          <h2 id="tituloHistorico">📚 Registro de pagos</h2>
+          <h2 id="tituloHistorico">Registro de pagos</h2>
           <p class="muted tiny">
             Aquí pueden revisar cada abono, el acumulado total y cómo va bajando el saldo.
           </p>
@@ -297,7 +248,7 @@
             id="search"
             class="input"
             type="search"
-            placeholder="🔎 Buscar por fecha, mes o valor"
+            placeholder="Buscar por fecha, mes o valor"
             aria-label="Buscar en el histórico"
             autocomplete="off"
           />
@@ -308,7 +259,7 @@
         </div>
       </div>
 
-      <div class="tableWrap">
+      <div class="tableWrap" tabindex="0" role="region" aria-label="Movimientos del crédito">
         <table id="table" aria-label="Tabla histórica de pagos">
           <thead>
             <tr>
@@ -326,7 +277,7 @@
       <div class="statusRow">
         <p class="muted tiny" id="status" aria-live="polite"></p>
         <p class="muted tiny" id="lastUpdated">
-          🕓 Última actualización visual:
+          Actualizado:
           <span id="lastUpdatedValue">—</span>
         </p>
       </div>
@@ -336,8 +287,7 @@
     <section class="card block infoPanel" aria-labelledby="tituloInfo">
       <div class="blockHeader simple">
         <div>
-          <p class="sectionKicker">Referencia</p>
-          <h2 id="tituloInfo">ℹ️ Cómo leer este panel</h2>
+          <h2 id="tituloInfo">Cómo leer este panel</h2>
         </div>
       </div>
 
@@ -345,14 +295,14 @@
         <article class="infoItem">
           <h3>Saldo pendiente</h3>
           <p class="muted">
-            Es la diferencia entre el compromiso contractual estimado y la suma de todos los pagos registrados. No representa el saldo exacto de capital que reporte el banco.
+            Es la diferencia entre el compromiso contractual estimado y la suma de todos los pagos registrados. Para consultar el saldo de capital, revisa el extracto bancario.
           </p>
         </article>
 
         <article class="infoItem">
           <h3>Promedios</h3>
           <p class="muted">
-            Se calculan únicamente con meses donde sí hubo pago. No adivina milagros financieros, solo hace cuentas.
+            Los promedios toman en cuenta los meses con pagos registrados.
           </p>
         </article>
 
@@ -366,20 +316,6 @@
     </section>
   </main>
 
-  <footer class="wrap footer muted">
-    Hecho para entender el crédito sin sufrir con hojas infinitas ni cuentas atravesadas. 🫠💛
-  </footer>
-
-  <script>
-    document.addEventListener("click", (e) => {
-      const t = e.target;
-      if (t && (t.tagName === "BUTTON" || t.tagName === "SELECT" || t.tagName === "INPUT")) {
-        t.classList.add("touched");
-        setTimeout(() => t.classList.remove("touched"), 250);
-      }
-    });
-  </script>
-
-  <script type="module" src="./app.js"></script>
+  <script type="module" src="./app.js?v=2"></script>
 </body>
 </html>
